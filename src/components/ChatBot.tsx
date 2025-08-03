@@ -29,12 +29,12 @@ const ChatBot = () => {
       setAiStatus('✅ Intelligent AI Connected!');
       console.log('AI Service initialized with API key');
     } else {
-      // Set the API key in localStorage for testing
-      const qwenApiKey = 'cpk_21a4f96c60fb4ee6a3b718e38d4d05d4.c49223a8a1e6572896ef699a2fc5312e.ieAtvCK5HZMScAvOtK62uJh2zSaoAdnI';
-      localStorage.setItem('baymax_ai_api_key', qwenApiKey);
-      aiService.initialize(qwenApiKey);
-      setAiStatus('✅ Intelligent AI Connected!');
-      console.log('API key set in localStorage and AI Service initialized');
+      // Set the OpenRouter API key in localStorage
+      const openRouterApiKey = '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';
+      localStorage.setItem('baymax_ai_api_key', openRouterApiKey);
+      aiService.initialize(openRouterApiKey);
+      setAiStatus('✅ OpenRouter AI Connected!');
+      console.log('OpenRouter API key set in localStorage and AI Service initialized');
     }
   }, []);
 

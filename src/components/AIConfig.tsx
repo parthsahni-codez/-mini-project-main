@@ -147,14 +147,15 @@ const AIConfig = () => {
         </div>
 
         <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-          <h3 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">💡 Get API Keys:</h3>
+          <h3 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">💡 AI Integration Options:</h3>
           <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+            <li>• <strong>OpenRouter (Current):</strong> <a href="https://openrouter.ai/" target="_blank" rel="noopener noreferrer" className="underline">openrouter.ai</a> - Multiple AI models</li>
             <li>• <strong>OpenAI:</strong> <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="underline">platform.openai.com</a></li>
             <li>• <strong>Anthropic Claude:</strong> <a href="https://console.anthropic.com/" target="_blank" rel="noopener noreferrer" className="underline">console.anthropic.com</a></li>
             <li>• <strong>Google Gemini:</strong> <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="underline">makersuite.google.com</a></li>
           </ul>
           <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
-            Any of these API keys will work! BayMax will automatically try each service.
+            Currently using OpenRouter with Qwen model. BayMax will automatically try each service.
           </p>
         </div>
 

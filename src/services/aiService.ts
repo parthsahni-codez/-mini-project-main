@@ -90,6 +90,18 @@ class AIService {
     // Try different API endpoints
     const endpoints = [
       {
+        name: 'OpenRouter (Qwen)',
+        url: 'https://openrouter.ai/api/v1/chat/completions',
+        data: {
+          model: 'qwen/qwen2.5-7b-instruct',
+          messages: messages,
+          max_tokens: 300,
+          temperature: 0.7,
+          presence_penalty: 0.1,
+          frequency_penalty: 0.1
+        }
+      },
+      {
         name: 'OpenAI API',
         url: 'https://api.openai.com/v1/chat/completions',
         data: {
@@ -136,7 +148,11 @@ class AIService {
         };
 
         // Set appropriate authorization header based on service
-        if (endpoint.name === 'OpenAI API') {
+        if (endpoint.name === 'OpenRouter (Qwen)') {
+          headers['Authorization'] = `Bearer ${this.apiKey}`;
+          headers['HTTP-Referer'] = 'https://baymax-mental-health.vercel.app';
+          headers['X-Title'] = 'BayMax Mental Health App';
+        } else if (endpoint.name === 'OpenAI API') {
           headers['Authorization'] = `Bearer ${this.apiKey}`;
         } else if (endpoint.name === 'Anthropic Claude') {
           headers['x-api-key'] = this.apiKey;
@@ -153,7 +169,9 @@ class AIService {
         let aiResponse = null;
 
         // Parse response based on service
-        if (endpoint.name === 'OpenAI API' && response.data?.choices?.[0]?.message?.content) {
+        if (endpoint.name === 'OpenRouter (Qwen)' && response.data?.choices?.[0]?.message?.content) {
+          aiResponse = response.data.choices[0].message.content;
+        } else if (endpoint.name === 'OpenAI API' && response.data?.choices?.[0]?.message?.content) {
           aiResponse = response.data.choices[0].message.content;
         } else if (endpoint.name === 'Anthropic Claude' && response.data?.content?.[0]?.text) {
           aiResponse = response.data.content[0].text;
