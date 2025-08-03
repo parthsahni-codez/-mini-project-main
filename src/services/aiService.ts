@@ -87,7 +87,7 @@ class AIService {
       content: userMessage
     });
 
-    // Try different API endpoints
+    // Try OpenRouter endpoints only (to avoid CORS issues)
     const endpoints = [
       {
         name: 'OpenRouter (Qwen)',
@@ -112,42 +112,6 @@ class AIService {
           presence_penalty: 0.1,
           frequency_penalty: 0.1
         }
-      },
-      {
-        name: 'OpenAI API',
-        url: 'https://api.openai.com/v1/chat/completions',
-        data: {
-          model: 'gpt-3.5-turbo',
-          messages: messages,
-          max_tokens: 300,
-          temperature: 0.7,
-          presence_penalty: 0.1,
-          frequency_penalty: 0.1
-        }
-      },
-      {
-        name: 'Anthropic Claude',
-        url: 'https://api.anthropic.com/v1/messages',
-        data: {
-          model: 'claude-3-haiku-20240307',
-          max_tokens: 300,
-          messages: messages
-        }
-      },
-      {
-        name: 'Google Gemini',
-        url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent',
-        data: {
-          contents: [{
-            parts: [{
-              text: messages.map(m => `${m.role}: ${m.content}`).join('\n')
-            }]
-          }],
-          generationConfig: {
-            maxOutputTokens: 300,
-            temperature: 0.7
-          }
-        }
       }
     ];
 
@@ -160,20 +124,11 @@ class AIService {
           'Content-Type': 'application/json'
         };
 
-        // Set appropriate authorization header based on service
-        if (endpoint.name.startsWith('OpenRouter')) {
-          headers['Authorization'] = `Bearer ${this.apiKey}`;
-          headers['HTTP-Referer'] = 'https://baymax-mental-health.vercel.app';
-          headers['X-Title'] = 'BayMax Mental Health App';
-          console.log('Using OpenRouter headers:', headers);
-        } else if (endpoint.name === 'OpenAI API') {
-          headers['Authorization'] = `Bearer ${this.apiKey}`;
-        } else if (endpoint.name === 'Anthropic Claude') {
-          headers['x-api-key'] = this.apiKey;
-          headers['anthropic-version'] = '2023-06-01';
-        } else if (endpoint.name === 'Google Gemini') {
-          headers['Authorization'] = `Bearer ${this.apiKey}`;
-        }
+        // Set OpenRouter headers
+        headers['Authorization'] = `Bearer ${this.apiKey}`;
+        headers['HTTP-Referer'] = 'https://mini-project-main-kohl.vercel.app';
+        headers['X-Title'] = 'BayMax Mental Health App';
+        console.log('Using OpenRouter headers:', headers);
 
         const response = await axios.post(endpoint.url, endpoint.data, {
           headers: headers,
@@ -184,15 +139,9 @@ class AIService {
 
         let aiResponse = null;
 
-        // Parse response based on service
-        if (endpoint.name.startsWith('OpenRouter') && response.data?.choices?.[0]?.message?.content) {
+        // Parse OpenRouter response
+        if (response.data?.choices?.[0]?.message?.content) {
           aiResponse = response.data.choices[0].message.content;
-        } else if (endpoint.name === 'OpenAI API' && response.data?.choices?.[0]?.message?.content) {
-          aiResponse = response.data.choices[0].message.content;
-        } else if (endpoint.name === 'Anthropic Claude' && response.data?.content?.[0]?.text) {
-          aiResponse = response.data.content[0].text;
-        } else if (endpoint.name === 'Google Gemini' && response.data?.candidates?.[0]?.content?.parts?.[0]?.text) {
-          aiResponse = response.data.candidates[0].content.parts[0].text;
         }
 
         if (aiResponse) {
