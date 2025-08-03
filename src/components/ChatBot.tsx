@@ -30,7 +30,7 @@ const ChatBot = () => {
       console.log('AI Service initialized with API key');
     } else {
       // Set the OpenRouter API key in localStorage
-      const openRouterApiKey = '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';
+      const openRouterApiKey = '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';
       localStorage.setItem('baymax_ai_api_key', openRouterApiKey);
       aiService.initialize(openRouterApiKey);
       setAiStatus('✅ OpenRouter AI Connected!');
