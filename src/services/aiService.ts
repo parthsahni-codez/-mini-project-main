@@ -90,15 +90,23 @@ class AIService {
     // Try OpenRouter endpoints only (to avoid CORS issues)
     const endpoints = [
       {
+        name: 'OpenRouter (Mistral)',
+        url: 'https://openrouter.ai/api/v1/chat/completions',
+        data: {
+          model: 'mistralai/mistral-7b-instruct',
+          messages: messages,
+          max_tokens: 300,
+          temperature: 0.7
+        }
+      },
+      {
         name: 'OpenRouter (Qwen)',
         url: 'https://openrouter.ai/api/v1/chat/completions',
         data: {
           model: 'qwen/qwen2.5-7b-instruct',
           messages: messages,
           max_tokens: 300,
-          temperature: 0.7,
-          presence_penalty: 0.1,
-          frequency_penalty: 0.1
+          temperature: 0.7
         }
       },
       {
@@ -108,9 +116,7 @@ class AIService {
           model: 'openai/gpt-3.5-turbo',
           messages: messages,
           max_tokens: 300,
-          temperature: 0.7,
-          presence_penalty: 0.1,
-          frequency_penalty: 0.1
+          temperature: 0.7
         }
       }
     ];
@@ -150,12 +156,14 @@ class AIService {
         } else {
           console.log(`${endpoint.name} no valid response found in:`, response.data);
         }
-      } catch (error: any) {
-        console.log(`${endpoint.name} failed:`, error.message);
-        if (error.response) {
-          console.log('Error response:', error.response.data);
+              } catch (error: any) {
+          console.log(`${endpoint.name} failed:`, error.message);
+          if (error.response) {
+            console.log('Error response:', error.response.data);
+            console.log('Error status:', error.response.status);
+            console.log('Error headers:', error.response.headers);
+          }
         }
-      }
     }
 
     return null;
