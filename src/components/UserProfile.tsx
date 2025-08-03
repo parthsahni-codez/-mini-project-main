@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
-import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 
 const DOCTORS = [
   {
@@ -46,17 +45,20 @@ const UserProfile = () => {
   return (
     <Card className="mb-4">
       <CardHeader className="flex flex-row items-center space-x-4">
-        <Avatar>
-          <AvatarImage src={doctor.avatar} alt={doctor.name} />
-          <AvatarFallback>{doctor.name.split(' ').map(n => n[0]).join('').slice(0,2)}</AvatarFallback>
-        </Avatar>
+        <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full flex items-center justify-center">
+          <span className="text-white font-bold text-lg">
+            {doctor.name.split(' ').map(n => n[0]).join('').slice(0,2)}
+          </span>
+        </div>
         <div>
-          <CardTitle>{doctor.name}</CardTitle>
+          <CardTitle className="text-lg">{doctor.name}</CardTitle>
           <div className="text-sm text-gray-500 dark:text-gray-400">{doctor.specialty}</div>
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-gray-700 dark:text-gray-300">Connected Indian Doctor. Reach out for support and guidance anytime!</p>
+        <p className="text-gray-700 dark:text-gray-300 text-sm">
+          Connected Indian Doctor. Reach out for support and guidance anytime!
+        </p>
       </CardContent>
     </Card>
   );

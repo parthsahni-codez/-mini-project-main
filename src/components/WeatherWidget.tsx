@@ -1,16 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
-import { Sun, Cloud, CloudRain, CloudSnow, CloudSun, Loader2, AlertTriangle } from 'lucide-react';
-
-const getWeatherIcon = (code: number) => {
-  // Open-Meteo weather codes: https://open-meteo.com/en/docs#api_form
-  if (code === 0) return <Sun className="w-8 h-8 text-yellow-400" />; // Clear
-  if ([1, 2, 3].includes(code)) return <CloudSun className="w-8 h-8 text-yellow-300" />; // Mainly clear, partly cloudy
-  if ([45, 48].includes(code)) return <Cloud className="w-8 h-8 text-gray-400" />; // Fog
-  if ([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return <CloudRain className="w-8 h-8 text-blue-400" />; // Rain
-  if ([71, 73, 75, 77, 85, 86].includes(code)) return <CloudSnow className="w-8 h-8 text-blue-200" />; // Snow
-  return <Cloud className="w-8 h-8 text-gray-400" />; // Default
-};
 
 const WeatherWidget = () => {
   const [weather, setWeather] = useState<any>(null);
@@ -24,6 +13,7 @@ const WeatherWidget = () => {
       setLoading(false);
       return;
     }
+    
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
@@ -57,24 +47,57 @@ const WeatherWidget = () => {
     );
   }, []);
 
+  const getWeatherEmoji = (temperature: number) => {
+    if (temperature >= 30) return '🌡️';
+    if (temperature >= 20) return '☀️';
+    if (temperature >= 10) return '🌤️';
+    if (temperature >= 0) return '🌥️';
+    return '❄️';
+  };
+
+  if (loading) {
+    return (
+      <Card className="mb-4">
+        <CardHeader>
+          <CardTitle className="text-lg">🌤️ Weather</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-gray-600 dark:text-gray-400">Loading weather...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="mb-4">
+        <CardHeader>
+          <CardTitle className="text-lg">🌤️ Weather</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-gray-600 dark:text-gray-400">{error}</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="mb-4">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Weather</CardTitle>
-        {weather && getWeatherIcon(weather.weathercode)}
-        {loading && <Loader2 className="w-6 h-6 animate-spin text-gray-400" />}
-        {error && <AlertTriangle className="w-6 h-6 text-red-400" />}
+      <CardHeader>
+        <CardTitle className="text-lg">🌤️ Weather</CardTitle>
       </CardHeader>
       <CardContent>
-        {loading && <div className="text-center text-gray-500">Loading...</div>}
-        {error && <div className="text-center text-red-500 text-sm">{error}</div>}
-        {weather && !loading && !error && (
-          <div className="flex flex-col items-center">
-            <div className="text-lg font-semibold">{location}</div>
-            <div className="text-2xl">{Math.round(weather.temperature)}°C</div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">Wind: {weather.windspeed} km/h</div>
+        <div className="text-center">
+          <div className="text-3xl mb-2">
+            {getWeatherEmoji(weather.temperature)}
           </div>
-        )}
+          <div className="text-2xl font-bold text-gray-800 dark:text-white">
+            {Math.round(weather.temperature)}°C
+          </div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            {location}
+          </div>
+        </div>
       </CardContent>
     </Card>
   );

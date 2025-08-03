@@ -1,25 +1,27 @@
-import { useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
+import { Button } from '../components/ui/button';
 
 const NotFound = () => {
-  const location = useLocation();
-
-  useEffect(() => {
-    console.error(
-      "404 Error: User attempted to access non-existent route:",
-      location.pathname
-    );
-  }, [location.pathname]);
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">404</h1>
-        <p className="text-xl text-gray-600 mb-4">Oops! Page not found</p>
-        <a href="/" className="text-blue-500 hover:text-blue-700 underline">
-          Return to Home
-        </a>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center px-4">
+      <Card className="max-w-md w-full text-center">
+        <CardHeader>
+          <div className="text-6xl mb-4">🤖</div>
+          <CardTitle className="text-2xl">Oops! Page Not Found</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-gray-600 dark:text-gray-400">
+            The page you're looking for doesn't exist. Don't worry, BayMax is here to help you find your way back!
+          </p>
+          <Link to="/">
+            <Button className="w-full bg-blue-500 hover:bg-blue-600">
+              🏠 Go Home
+            </Button>
+          </Link>
+        </CardContent>
+      </Card>
     </div>
   );
 };

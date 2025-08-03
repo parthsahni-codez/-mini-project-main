@@ -1,119 +1,141 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
+import { Button } from './ui/button';
 
 const BreathingExercise = () => {
   const [isActive, setIsActive] = useState(false);
-  const [phase, setPhase] = useState('inhale'); // 'inhale', 'hold', 'exhale'
-  const [timer, setTimer] = useState(0);
+  const [phase, setPhase] = useState<'inhale' | 'hold' | 'exhale' | 'hold2'>('inhale');
+  const [timeLeft, setTimeLeft] = useState(4);
   const [cycle, setCycle] = useState(0);
+
+  const phases = {
+    inhale: { duration: 4, text: 'Breathe In', emoji: '🫁' },
+    hold: { duration: 4, text: 'Hold', emoji: '⏸️' },
+    exhale: { duration: 4, text: 'Breathe Out', emoji: '💨' },
+    hold2: { duration: 4, text: 'Hold', emoji: '⏸️' }
+  };
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
     
-    if (isActive) {
+    if (isActive && timeLeft > 0) {
       interval = setInterval(() => {
-        setTimer(prev => {
-          const newTimer = prev + 1;
-          
-          if (phase === 'inhale' && newTimer >= 4) {
-            setPhase('hold');
-            return 0;
-          } else if (phase === 'hold' && newTimer >= 2) {
-            setPhase('exhale');
-            return 0;
-          } else if (phase === 'exhale' && newTimer >= 4) {
-            setPhase('inhale');
-            setCycle(prev => prev + 1);
-            return 0;
-          }
-          
-          return newTimer;
-        });
+        setTimeLeft(prev => prev - 1);
       }, 1000);
+    } else if (isActive && timeLeft === 0) {
+      // Move to next phase
+      const phaseOrder: Array<'inhale' | 'hold' | 'exhale' | 'hold2'> = ['inhale', 'hold', 'exhale', 'hold2'];
+      const currentIndex = phaseOrder.indexOf(phase);
+      const nextPhase = phaseOrder[(currentIndex + 1) % 4];
+      
+      if (nextPhase === 'inhale') {
+        setCycle(prev => prev + 1);
+      }
+      
+      setPhase(nextPhase);
+      setTimeLeft(phases[nextPhase].duration);
     }
-    
+
     return () => clearInterval(interval);
-  }, [isActive, phase]);
+  }, [isActive, timeLeft, phase]);
 
   const startExercise = () => {
     setIsActive(true);
     setPhase('inhale');
-    setTimer(0);
+    setTimeLeft(4);
     setCycle(0);
   };
 
   const stopExercise = () => {
     setIsActive(false);
-    setTimer(0);
-    setCycle(0);
     setPhase('inhale');
+    setTimeLeft(4);
+    setCycle(0);
   };
 
-  const getInstruction = () => {
-    switch (phase) {
-      case 'inhale': return 'Breathe In...';
-      case 'hold': return 'Hold...';
-      case 'exhale': return 'Breathe Out...';
-      default: return 'Ready?';
-    }
-  };
-
-  const getCircleClass = () => {
-    if (!isActive) return 'w-32 h-32';
-    switch (phase) {
-      case 'inhale': return 'w-40 h-40 scale-125';
-      case 'hold': return 'w-40 h-40 scale-125';
-      case 'exhale': return 'w-24 h-24 scale-75';
-      default: return 'w-32 h-32';
-    }
+  const getCircleSize = () => {
+    if (phase === 'inhale') return 200 + (4 - timeLeft) * 25;
+    if (phase === 'exhale') return 300 - (4 - timeLeft) * 25;
+    return 300;
   };
 
   return (
-    <Card className="bg-gradient-to-br from-green-100 to-teal-100 dark:from-green-900 dark:to-teal-900 border-0 shadow-lg">
+    <Card className="bg-gradient-to-br from-teal-100 to-green-100 dark:from-teal-900 dark:to-green-900 border-0 shadow-lg">
       <CardHeader className="text-center">
         <CardTitle className="text-xl text-gray-800 dark:text-white flex items-center justify-center gap-2">
           🫁 Breathing Exercise
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="flex flex-col items-center space-y-4">
-          <div 
-            className={`${getCircleClass()} bg-gradient-to-br from-blue-400 to-cyan-300 rounded-full transition-all duration-1000 ease-in-out flex items-center justify-center`}
-          >
-            <span className="text-white font-semibold text-sm">
-              {isActive ? `${4 - timer}` : '🌬️'}
-            </span>
+        <div className="text-center">
+          <div className="flex justify-center items-center mb-6">
+            <div
+              className="border-4 border-blue-400 rounded-full flex items-center justify-center transition-all duration-1000 ease-in-out"
+              style={{
+                width: `${getCircleSize()}px`,
+                height: `${getCircleSize()}px`,
+                maxWidth: '300px',
+                maxHeight: '300px'
+              }}
+            >
+              <div className="text-center">
+                <div className="text-4xl mb-2">{phases[phase].emoji}</div>
+                <div className="text-2xl font-bold text-gray-800 dark:text-white">
+                  {timeLeft}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  {phases[phase].text}
+                </div>
+              </div>
+            </div>
           </div>
-          
-          <div className="text-center">
-            <p className="text-xl font-semibold text-gray-700 dark:text-gray-300">
-              {getInstruction()}
-            </p>
-            {isActive && (
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Cycle: {cycle}
-              </p>
+
+          <div className="text-center mb-4">
+            <div className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+              Cycle {cycle + 1}
+            </div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">
+              4-4-4-4 Breathing Pattern
+            </div>
+          </div>
+
+          <div className="flex gap-2 justify-center">
+            {!isActive ? (
+              <Button 
+                onClick={startExercise}
+                className="bg-gradient-to-r from-teal-500 to-green-500 hover:from-teal-600 hover:to-green-600 text-white font-bold py-3 px-6"
+              >
+                Start Breathing 🫁
+              </Button>
+            ) : (
+              <Button 
+                onClick={stopExercise}
+                variant="outline"
+                className="border-red-500 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+              >
+                Stop
+              </Button>
             )}
           </div>
         </div>
-        
-        <div className="flex gap-2">
-          {!isActive ? (
-            <Button onClick={startExercise} className="flex-1 bg-green-500 hover:bg-green-600">
-              Start Breathing 🌿
-            </Button>
-          ) : (
-            <Button onClick={stopExercise} variant="outline" className="flex-1">
-              Stop Exercise
-            </Button>
-          )}
+
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg">
+          <h3 className="font-semibold text-gray-800 dark:text-white mb-2">Instructions:</h3>
+          <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+            <li>• Breathe in for 4 seconds</li>
+            <li>• Hold for 4 seconds</li>
+            <li>• Breathe out for 4 seconds</li>
+            <li>• Hold for 4 seconds</li>
+            <li>• Repeat for 5-10 cycles</li>
+          </ul>
         </div>
-        
-        <p className="text-xs text-gray-600 dark:text-gray-400 text-center">
-          Follow the circle: Inhale for 4 seconds, hold for 2, exhale for 4. This helps you relax! 💚
-        </p>
+
+        <div className="text-center">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            This exercise helps reduce stress and anxiety. Focus on your breath and let your mind relax. 💙
+          </p>
+        </div>
       </CardContent>
     </Card>
   );

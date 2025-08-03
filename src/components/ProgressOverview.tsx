@@ -1,10 +1,9 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Progress } from './ui/progress';
-import { ChartContainer } from './ui/chart';
 
 const ProgressOverview = () => {
-  // Mock data
+  // Mock data - in a real app, this would come from actual user data
   const mood = 80; // percent
   const sleep = 65; // percent
   const tasks = 50; // percent

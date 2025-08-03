@@ -1,164 +1,184 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Send } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { ScrollArea } from './ui/scroll-area';
+import { Send, Bot, User } from 'lucide-react';
+import aiService from '../services/aiService';
 
 interface Message {
-  id: number;
+  id: string;
   text: string;
   isUser: boolean;
   timestamp: Date;
 }
 
 const ChatBot = () => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      text: "Hi there! I'm BayMax, your personal AI companion! 🤖💙 I'm here to help you with anything you need - whether you want to talk about your day, need help with problems, or just want a friend to chat with. How can I help you today?",
-      isUser: false,
-      timestamp: new Date(),
-    }
-  ]);
-  const [inputText, setInputText] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [aiStatus, setAiStatus] = useState('Initializing...');
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const getDeepSeekResponse = async (userMessage: string): Promise<string> => {
-    const apiKey = import.meta.env.VITE_DEEPSEEK_API_KEY;
-    const apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
-
-    console.log("API Key:", apiKey);
-
-    try {
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: 'deepseek/deepseek-r1-0528-qwen3-8b',
-          messages: [
-            { role: 'system', content: "You are BayMax, a friendly and supportive AI companion." },
-            { role: 'user', content: userMessage },
-          ],
-        }),
-      });
-      if (!response.ok) {
-        throw new Error('API error');
-      }
-      const data = await response.json();
-      return data.choices?.[0]?.message?.content || 'Sorry, I could not understand that.';
-    } catch (error) {
-      return 'Sorry, there was a problem connecting to the AI service.';
+    // Initialize AI service with API key from localStorage
+    const apiKey = localStorage.getItem('baymax_ai_api_key');
+    console.log('Loading API key from localStorage:', apiKey ? 'Found' : 'Not found');
+    
+    if (apiKey) {
+      aiService.initialize(apiKey);
+      setAiStatus('✅ Intelligent AI Connected!');
+      console.log('AI Service initialized with API key');
+    } else {
+      // Set the API key in localStorage for testing
+      const qwenApiKey = 'cpk_21a4f96c60fb4ee6a3b718e38d4d05d4.c49223a8a1e6572896ef699a2fc5312e.ieAtvCK5HZMScAvOtK62uJh2zSaoAdnI';
+      localStorage.setItem('baymax_ai_api_key', qwenApiKey);
+      aiService.initialize(qwenApiKey);
+      setAiStatus('✅ Intelligent AI Connected!');
+      console.log('API key set in localStorage and AI Service initialized');
     }
-  };
+  }, []);
 
-  const sendMessage = async () => {
-    if (!inputText.trim()) return;
+  const handleSendMessage = async () => {
+    if (!input.trim() || isLoading) return;
 
     const userMessage: Message = {
-      id: Date.now(),
-      text: inputText,
+      id: Date.now().toString(),
+      text: input.trim(),
       isUser: true,
-      timestamp: new Date(),
+      timestamp: new Date()
     };
 
     setMessages(prev => [...prev, userMessage]);
-    setInputText('');
-    setIsTyping(true);
+    setInput('');
+    setIsLoading(true);
 
-    // Call DeepSeek API for bot response
-    const botText = await getDeepSeekResponse(inputText);
-    const botResponse: Message = {
-      id: Date.now() + 1,
-      text: botText,
-      isUser: false,
-      timestamp: new Date(),
-    };
-    setMessages(prev => [...prev, botResponse]);
-    setIsTyping(false);
+    try {
+      // Get conversation context for AI
+      const context = messages.map(msg => msg.text);
+      
+      console.log('Sending message to AI:', userMessage.text);
+      const response = await aiService.getChatResponse(userMessage.text, context);
+      
+      if (response.success) {
+        const aiMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text: response.message,
+          isUser: false,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, aiMessage]);
+      } else {
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text: 'Sorry, I encountered an error. Please try again.',
+          isUser: false,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, errorMessage]);
+      }
+    } catch (error) {
+      console.error('Chat error:', error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: 'Sorry, I encountered an error. Please try again.',
+        isUser: false,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
   };
 
   return (
-    <Card className="bg-gradient-to-br from-cyan-100 to-blue-100 dark:from-cyan-900 dark:to-blue-900 border-0 shadow-lg h-full flex flex-col">
+    <Card className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900 dark:to-purple-900 border-0 shadow-lg">
       <CardHeader className="text-center">
         <CardTitle className="text-xl text-gray-800 dark:text-white flex items-center justify-center gap-2">
           💬 Chat with BayMax
         </CardTitle>
+        <div className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+          <span className="text-green-600 dark:text-green-400">{aiStatus}</span>
+        </div>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col space-y-4">
-        <div className="flex-1 space-y-3 overflow-y-auto max-h-96 p-2">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-[80%] p-3 rounded-lg ${
-                  message.isUser
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border'
-                }`}
-              >
-                {!message.isUser && (
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-blue-500">🤖</span>
-                    <span className="text-xs font-medium text-blue-600 dark:text-blue-400">BayMax</span>
-                  </div>
-                )}
-                <p className="text-sm leading-relaxed">{message.text}</p>
-              </div>
+      <CardContent className="space-y-4">
+        <ScrollArea className="h-96 w-full rounded-md border p-4">
+          {messages.length === 0 ? (
+            <div className="text-center text-gray-500 dark:text-gray-400 py-8">
+              <Bot className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              <p>Start a conversation with BayMax! 💙</p>
+              <p className="text-sm mt-2">I'm here to listen and support you.</p>
             </div>
-          ))}
-          
-          {isTyping && (
-            <div className="flex justify-start">
-              <div className="bg-white dark:bg-gray-700 p-3 rounded-lg border">
-                <div className="flex items-center gap-2">
-                  <span className="text-blue-500">🤖</span>
-                  <span className="text-xs font-medium text-blue-600 dark:text-blue-400">BayMax</span>
+          ) : (
+            <div className="space-y-4">
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                      message.isUser
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      {message.isUser ? (
+                        <User className="w-4 h-4" />
+                      ) : (
+                        <Bot className="w-4 h-4" />
+                      )}
+                      <span className="text-xs opacity-70">
+                        {message.timestamp.toLocaleTimeString()}
+                      </span>
+                    </div>
+                    <p className="whitespace-pre-wrap">{message.text}</p>
+                  </div>
                 </div>
-                <div className="flex space-x-1 mt-1">
-                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              ))}
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="bg-white dark:bg-gray-800 text-gray-800 dark:text-white max-w-xs lg:max-w-md px-4 py-2 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Bot className="w-4 h-4" />
+                      <span className="text-xs opacity-70">BayMax is typing...</span>
+                    </div>
+                    <div className="flex space-x-1 mt-2">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
-          <div ref={messagesEndRef} />
-        </div>
+        </ScrollArea>
         
         <div className="flex gap-2">
           <Input
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            placeholder="Type your message here..."
-            onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-            disabled={isTyping}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Type your message..."
+            disabled={isLoading}
+            className="flex-1"
           />
-          <Button 
-            onClick={sendMessage} 
-            disabled={!inputText.trim() || isTyping}
+          <Button
+            onClick={handleSendMessage}
+            disabled={!input.trim() || isLoading}
             className="bg-blue-500 hover:bg-blue-600"
           >
             <Send className="w-4 h-4" />
           </Button>
         </div>
-        
-        <p className="text-xs text-gray-600 dark:text-gray-400 text-center">
-          I'm here to listen, help, and be your friend! 💙 You can talk to me about anything.
-        </p>
       </CardContent>
     </Card>
   );
