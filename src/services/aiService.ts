@@ -87,28 +87,8 @@ class AIService {
       content: userMessage
     });
 
-    // Try OpenRouter endpoints only (to avoid CORS issues)
+    // Try OpenRouter with basic model first
     const endpoints = [
-      {
-        name: 'OpenRouter (Mistral)',
-        url: 'https://openrouter.ai/api/v1/chat/completions',
-        data: {
-          model: 'mistralai/mistral-7b-instruct',
-          messages: messages,
-          max_tokens: 300,
-          temperature: 0.7
-        }
-      },
-      {
-        name: 'OpenRouter (Qwen)',
-        url: 'https://openrouter.ai/api/v1/chat/completions',
-        data: {
-          model: 'qwen/qwen2.5-7b-instruct',
-          messages: messages,
-          max_tokens: 300,
-          temperature: 0.7
-        }
-      },
       {
         name: 'OpenRouter (GPT-3.5)',
         url: 'https://openrouter.ai/api/v1/chat/completions',

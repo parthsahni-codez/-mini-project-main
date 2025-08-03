@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>OpenRouter API Test</title>
+    <title>Simple OpenRouter Test</title>
 </head>
 <body>
-    <h1>OpenRouter API Test</h1>
-    <button onclick="testAPI()">Test OpenRouter API</button>
+    <h1>Simple OpenRouter API Test</h1>
+    <button onclick="testSimple()">Test Simple API Call</button>
     <div id="result"></div>
 
     <script>
-        async function testAPI() {
+        async function testSimple() {
             const apiKey = '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';
             
             try {
@@ -17,20 +17,18 @@
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${apiKey}`,
-                        'Content-Type': 'application/json',
-                        'HTTP-Referer': 'https://mini-project-main-kohl.vercel.app',
-                        'X-Title': 'BayMax Mental Health App'
+                        'Content-Type': 'application/json'
                     },
-                                         body: JSON.stringify({
-                         model: 'openai/gpt-3.5-turbo',
-                         messages: [{ role: 'user', content: 'Hello, this is a test message.' }],
-                         max_tokens: 50
-                     })
+                    body: JSON.stringify({
+                        model: 'openai/gpt-3.5-turbo',
+                        messages: [{ role: 'user', content: 'Hi' }],
+                        max_tokens: 10
+                    })
                 });
 
                 const data = await response.json();
                 document.getElementById('result').innerHTML = `
-                    <h3>Response Status: ${response.status}</h3>
+                    <h3>Status: ${response.status}</h3>
                     <pre>${JSON.stringify(data, null, 2)}</pre>
                 `;
             } catch (error) {
