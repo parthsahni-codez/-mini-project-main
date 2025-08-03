@@ -102,6 +102,18 @@ class AIService {
         }
       },
       {
+        name: 'OpenRouter (GPT-3.5)',
+        url: 'https://openrouter.ai/api/v1/chat/completions',
+        data: {
+          model: 'openai/gpt-3.5-turbo',
+          messages: messages,
+          max_tokens: 300,
+          temperature: 0.7,
+          presence_penalty: 0.1,
+          frequency_penalty: 0.1
+        }
+      },
+      {
         name: 'OpenAI API',
         url: 'https://api.openai.com/v1/chat/completions',
         data: {
@@ -142,16 +154,18 @@ class AIService {
     for (const endpoint of endpoints) {
       try {
         console.log(`Trying ${endpoint.name}...`);
+        console.log('Request data:', JSON.stringify(endpoint.data, null, 2));
         
         let headers: any = {
           'Content-Type': 'application/json'
         };
 
         // Set appropriate authorization header based on service
-        if (endpoint.name === 'OpenRouter (Qwen)') {
+        if (endpoint.name.startsWith('OpenRouter')) {
           headers['Authorization'] = `Bearer ${this.apiKey}`;
           headers['HTTP-Referer'] = 'https://baymax-mental-health.vercel.app';
           headers['X-Title'] = 'BayMax Mental Health App';
+          console.log('Using OpenRouter headers:', headers);
         } else if (endpoint.name === 'OpenAI API') {
           headers['Authorization'] = `Bearer ${this.apiKey}`;
         } else if (endpoint.name === 'Anthropic Claude') {
@@ -166,10 +180,12 @@ class AIService {
           timeout: 15000
         });
 
+        console.log(`${endpoint.name} response:`, response.data);
+
         let aiResponse = null;
 
         // Parse response based on service
-        if (endpoint.name === 'OpenRouter (Qwen)' && response.data?.choices?.[0]?.message?.content) {
+        if (endpoint.name.startsWith('OpenRouter') && response.data?.choices?.[0]?.message?.content) {
           aiResponse = response.data.choices[0].message.content;
         } else if (endpoint.name === 'OpenAI API' && response.data?.choices?.[0]?.message?.content) {
           aiResponse = response.data.choices[0].message.content;
@@ -180,8 +196,10 @@ class AIService {
         }
 
         if (aiResponse) {
-          console.log(`${endpoint.name} response received`);
+          console.log(`${endpoint.name} response received:`, aiResponse);
           return aiResponse;
+        } else {
+          console.log(`${endpoint.name} no valid response found in:`, response.data);
         }
       } catch (error: any) {
         console.log(`${endpoint.name} failed:`, error.message);
@@ -337,14 +355,31 @@ class AIService {
     this.apiKey = apiKey;
 
     try {
-      const response = await this.tryRealAI('Hello, this is a test message.');
-      if (response) {
-        return { valid: true, service: 'AI Service' };
+      console.log('Testing API key with OpenRouter...');
+      const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
+        model: 'qwen/qwen2.5-7b-instruct',
+        messages: [{ role: 'user', content: 'Hello, this is a test message.' }],
+        max_tokens: 50
+      }, {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://baymax-mental-health.vercel.app',
+          'X-Title': 'BayMax Mental Health App'
+        },
+        timeout: 10000
+      });
+
+      console.log('API test response:', response.data);
+      
+      if (response.data?.choices?.[0]?.message?.content) {
+        return { valid: true, service: 'OpenRouter' };
       } else {
         return { valid: false, error: 'API key is invalid or service is unavailable' };
       }
     } catch (error: any) {
-      return { valid: false, error: error.message || 'API validation failed' };
+      console.error('API validation error:', error.response?.data || error.message);
+      return { valid: false, error: error.response?.data?.error?.message || error.message || 'API validation failed' };
     } finally {
       this.apiKey = originalKey;
     }
